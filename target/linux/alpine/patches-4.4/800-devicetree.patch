@@ -1,0 +1,13 @@
+diff -urpN arch_orig/arm/boot/dts/Makefile arch/arm/boot/dts/Makefile
+--- a/arch/arm/boot/dts/Makefile	2017-03-04 19:29:47.260401250 +0800
++++ b/arch/arm/boot/dts/Makefile	2017-03-04 19:31:27.500066301 +0800
+@@ -1,7 +1,8 @@
+ ifeq ($(CONFIG_OF),y)
+ 
+ dtb-$(CONFIG_ARCH_ALPINE) += \
+-	alpine-db.dtb
++	alpine-db.dtb \
++	alpine-R9000.dtb
+ dtb-$(CONFIG_MACH_ASM9260) += \
+ 	alphascale-asm9260-devkit.dtb
+ # Keep at91 dtb files sorted alphabetically for each SoC
