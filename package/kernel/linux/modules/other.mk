@@ -1003,3 +1003,33 @@ define KernelPackage/tpm-i2c-atmel/description
 endef
 
 $(eval $(call KernelPackage,tpm-i2c-atmel))
+
+define KernelPackage/tpm-i2c-infineon
+  SUBMENU:=$(OTHER_MENU)
+  TITLE:= TPM I2C Infineon driver
+  DEPENDS:= +kmod-tpm +kmod-i2c-core
+  KCONFIG:= CONFIG_TCG_TIS_I2C_INFINEON
+  FILES:= $(LINUX_DIR)/drivers/char/tpm/tpm_i2c_infineon.ko
+  AUTOLOAD:= $(call AutoLoad,40,tpm_i2c_infineon,1)
+endef
+
+define KernelPackage/tpm-i2c-infineon/description
+	This enables the TPM Interface Specification 1.2 Interface (I2C - Infineon)
+endef
+
+$(eval $(call KernelPackage,tpm-i2c-infineon))
+
+
+define KernelPackage/w83627hf-wdt
+  SUBMENU:=$(OTHER_MENU)
+  TITLE:=Winbond 83627HF Watchdog Timer
+  KCONFIG:=CONFIG_W83627HF_WDT
+  FILES:=$(LINUX_DIR)/drivers/$(WATCHDOG_DIR)/w83627hf_wdt.ko
+  AUTOLOAD:=$(call AutoLoad,50,w83627hf-wdt,1)
+endef
+
+define KernelPackage/w83627hf-wdt/description
+  Kernel module for Winbond 83627HF Watchdog Timer
+endef
+
+$(eval $(call KernelPackage,w83627hf-wdt))
