@@ -1,11 +1,11 @@
 #!/bin/sh
 # Copyright (C) 2010-2013 OpenWrt.org
 
+. /lib/functions.sh
 . /lib/functions/leds.sh
-. /lib/ramips.sh
 
 get_status_led() {
-	board=$(ramips_board_name)
+	board=$(board_name)
 
 	case $board in
 	3g150b|\
@@ -16,14 +16,16 @@ get_status_led() {
 	3g-6200n|\
 	ar670w|\
 	ar725w|\
-	br-6425|\
 	br-6475nd|\
 	c50|\
 	dch-m225|\
 	dir-860l-b1|\
 	e1700|\
+	ex2700|\
 	ex3700|\
 	fonera20n|\
+	hg255d|\
+	kn|\
 	kn_rc|\
 	kn_rf|\
 	kng_rc|\
@@ -34,12 +36,15 @@ get_status_led() {
 	nbg-419n2|\
 	pwh2004|\
 	r6220|\
+	tl-wr840n-v4|\
+	tl-wr841n-v13|\
 	vr500|\
 	wnce2001|\
 	wndr3700v5|\
 	x5|\
 	x8|\
-	xdxrn502j)
+	xdxrn502j|\
+	wn3000rpv3)
 		status_led="$board:green:power"
 		;;
 	3g-6200nl)
@@ -49,13 +54,11 @@ get_status_led() {
 	cs-qr10|\
 	d105|\
 	dcs-930l-b1|\
-	ex2700|\
 	hlk-rm04|\
 	jhr-n825r|\
 	mpr-a1|\
 	mpr-a2|\
-	mzk-ex750np|\
-	wn3000rpv3)
+	mzk-ex750np)
 		status_led="$board:red:power"
 		;;
 	ai-br100|\
@@ -74,6 +77,7 @@ get_status_led() {
 	dir-620-a1|\
 	dir-620-d1|\
 	dwr-512-b|\
+	gb-pc1|\
 	hpm|\
 	hw550-3g|\
 	mac1200rv2|\
@@ -100,6 +104,9 @@ get_status_led() {
 	wrh-300cr)
 		status_led="$board:green:wps"
 		;;
+	c108)
+		status_led="$board:green:lan"
+		;;
 	cf-wr800n|\
 	psg1208)
 		status_led="$board:white:wps"
@@ -112,10 +119,13 @@ get_status_led() {
 	w502u)
 		status_led="$board:blue:wps"
 		;;
+	c20|\
 	d240|\
 	dap-1350|\
 	na930|\
 	pbr-m1|\
+	re350-v1|\
+	rt-ac51u|\
 	rt-n13u|\
 	rt-n14u|\
 	rt-n15|\
@@ -124,7 +134,8 @@ get_status_led() {
 	wl-330n3g|\
 	wli-tx4-ag300n|\
 	y1|\
-	y1s)
+	y1s|\
+	youku-yk1)
 		status_led="$board:blue:power"
 		;;
 	db-wrt01|\
@@ -153,6 +164,11 @@ get_status_led() {
 	hc5962)
 		status_led="$board:white:status"
 		;;
+	k2p|\
+	m3|\
+	miwifi-nano)
+		status_led="$board:blue:status"
+		;;
 	linkits7688| \
 	linkits7688d)
 		[ "$1" = "upgrade" ] && status_led="mediatek:orange:wifi"
@@ -160,13 +176,15 @@ get_status_led() {
 	m2m)
 		status_led="$board:blue:wifi"
 		;;
-	m3|\
-	miwifi-nano)
-		status_led="$board:blue:status"
+	gl-mt300n-v2)
+		status_led="$board:red:wlan"
 		;;
 	m4-4M|\
 	m4-8M)
 		status_led="m4:blue:status"
+		;;
+	mir3g)
+		status_led="$board:yellow:status"
 		;;
 	miwifi-mini|\
 	zte-q7)
@@ -207,6 +225,7 @@ get_status_led() {
 		;;
 	mzk-ex300np|\
 	rt-n10-plus|\
+	tew-638apb-v2|\
 	tew-691gr|\
 	tew-692gr|\
 	ur-326n4g|\
@@ -220,6 +239,9 @@ get_status_led() {
 	sap-g3200u3)
 		status_led="$board:green:usb"
 		;;
+	u25awf-h1)
+		status_led="u25awf:red:wifi"
+		;;
 	v22rw-2x2)
 		status_led="$board:green:security"
 		;;
@@ -229,6 +251,9 @@ get_status_led() {
 		;;
 	vocore2)
 		status_led="$board:fuchsia:status"
+		;;
+	vocore2lite)
+		status_led="$board:green:status"
 		;;
 	w306r-v20|\
 	witi|\

@@ -161,6 +161,7 @@ define Image/BuildDTB
 	$(TARGET_CROSS)cpp -nostdinc -x assembler-with-cpp \
 		-I$(DTS_DIR) \
 		-I$(DTS_DIR)/include \
+		-I$(LINUX_DIR)/include/ \
 		-undef -D__DTS__ $(3) \
 		-o $(2).tmp $(1)
 	$(LINUX_DIR)/scripts/dtc/dtc -O dtb \
@@ -277,7 +278,7 @@ endif
 
 ifdef CONFIG_TARGET_ROOTFS_CPIOGZ
   define Image/Build/cpiogz
-	( cd $(TARGET_DIR); find . | cpio -o -H newc | gzip -9n >$(BIN_DIR)/$(IMG_PREFIX)-rootfs.cpio.gz )
+	( cd $(TARGET_DIR); find . | cpio -o -H newc -R root:root | gzip -9n >$(BIN_DIR)/$(IMG_PREFIX)-rootfs.cpio.gz )
   endef
 endif
 

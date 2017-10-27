@@ -10,14 +10,13 @@ include $(INCLUDE_DIR)/kernel.mk
 
 PKG_NAME:=mac80211
 
-PKG_VERSION:=2017-01-31
+PKG_VERSION:=2017-10-06
 PKG_RELEASE:=1
 PKG_SOURCE_URL:=http://mirror2.openwrt.org/sources
-PKG_BACKPORT_VERSION:=
-PKG_HASH:=75e6d39e34cf156212a2509172a4a62b673b69eb4a1d9aaa565f7fa719fa2317
+PKG_HASH:=194786b7635f36b9ce280fd2319f6a4feeff209175e330ddbcbe789a3b4540a5
 
-PKG_SOURCE:=compat-wireless-$(PKG_VERSION)$(PKG_BACKPORT_VERSION).tar.xz
-PKG_BUILD_DIR:=$(KERNEL_BUILD_DIR)/compat-wireless-$(PKG_VERSION)
+PKG_SOURCE:=backports-$(PKG_VERSION).tar.xz
+PKG_BUILD_DIR:=$(KERNEL_BUILD_DIR)/backports-$(PKG_VERSION)
 PKG_BUILD_PARALLEL:=1
 
 PKG_MAINTAINER:=Felix Fietkau <nbd@nbd.name>
@@ -25,7 +24,7 @@ PKG_MAINTAINER:=Felix Fietkau <nbd@nbd.name>
 PKG_DRIVERS = \
 	adm8211 \
 	airo \
-	ath ath5k ath9k ath9k-common ath9k-htc ath10k \
+	ath ath5k ath6kl ath6kl-sdio ath6kl-usb ath9k ath9k-common ath9k-htc ath10k \
 	b43 b43legacy \
 	carl9170 \
 	hermes hermes-pci hermes-pcmcia hermes-plx\
@@ -42,8 +41,8 @@ PKG_DRIVERS = \
 	rt2800-lib rt2800-mmio rt2800-pci rt2800-soc rt2800-usb \
 	rt61-pci rt73-usb \
 	rtl8180 rtl8187 \
-	rtlwifi rtlwifi-pci rtlwifi-usb rtl8192c-common rtl8192ce rtl8192se \
-	rtl8192de rtl8192cu \
+	rtlwifi rtlwifi-pci rtlwifi-btcoexist rtlwifi-usb rtl8192c-common \
+	rtl8192ce rtl8192se rtl8192de rtl8192cu rtl8821ae \
 	rtl8xxxu \
 	wlcore wl12xx wl18xx \
 	zd1211rw
@@ -101,6 +100,7 @@ endef
 define KernelPackage/mac80211
   $(call KernelPackage/mac80211/Default)
   TITLE:=Linux 802.11 Wireless Networking Stack
+  # +kmod-crypto-cmac is a runtime only dependency of net/mac80211/aes_cmac.c
   DEPENDS+= +kmod-cfg80211 +hostapd-common
   KCONFIG:=\
 	CONFIG_AVERAGE=y
@@ -215,6 +215,43 @@ endef
 define KernelPackage/ath5k/description
  This module adds support for wireless adapters based on
  Atheros 5xxx chipset.
+endef
+
+define KernelPackage/ath6kl
+  $(call KernelPackage/mac80211/Default)
+  TITLE:=Atheros FullMAC wireless devices (common code for ath6kl_sdio and ath6kl_usb)
+  URL:=https://wireless.wiki.kernel.org/en/users/drivers/ath6kl
+  HIDDEN:=1
+  DEPENDS+= +kmod-ath +@DRIVER_11N_SUPPORT +@KERNEL_RELAY
+  FILES:= $(PKG_BUILD_DIR)/drivers/net/wireless/ath/ath6kl/ath6kl_core.ko
+endef
+
+define KernelPackage/ath6kl-sdio
+  $(call KernelPackage/mac80211/Default)
+  TITLE:=Atheros 802.11n SDIO wireless cards support
+  URL:=https://wireless.wiki.kernel.org/en/users/drivers/ath6kl
+  DEPENDS+= +kmod-mmc +kmod-ath6kl
+  FILES:= $(PKG_BUILD_DIR)/drivers/net/wireless/ath/ath6kl/ath6kl_sdio.ko
+  AUTOLOAD:=$(call AutoProbe,ath6kl_sdio)
+endef
+
+define KernelPackage/ath6kl-sdio/description
+This module adds support for wireless adapters based on
+Atheros IEEE 802.11n AR6003 and AR6004 family of chipsets.
+endef
+
+define KernelPackage/ath6kl-usb
+  $(call KernelPackage/mac80211/Default)
+  TITLE:=Atheros 802.11n USB wireless cards support
+  URL:=https://wireless.wiki.kernel.org/en/users/drivers/ath6kl
+  DEPENDS+= @USB_SUPPORT +kmod-usb-core +kmod-ath6kl
+  FILES:= $(PKG_BUILD_DIR)/drivers/net/wireless/ath/ath6kl/ath6kl_usb.ko
+  AUTOLOAD:=$(call AutoProbe,ath6kl_usb)
+endef
+
+define KernelPackage/ath6kl-usb/description
+This module adds support for wireless adapters based on the
+Atheros IEEE 802.11n AR6004 chipset.
 endef
 
 define KernelPackage/ath9k-common
@@ -793,7 +830,7 @@ endef
 
 define KernelPackage/iwlwifi
   $(call KernelPackage/mac80211/Default)
-  DEPENDS:= +kmod-mac80211 @PCI_SUPPORT +@DRIVER_11N_SUPPORT +iwlwifi-firmware @!LINUX_3_18
+  DEPENDS:= +kmod-mac80211 @PCI_SUPPORT +@DRIVER_11N_SUPPORT +@DRIVER_11AC_SUPPORT @!LINUX_3_18
   TITLE:=Intel AGN Wireless support
   FILES:= \
 	$(PKG_BUILD_DIR)/drivers/net/wireless/intel/iwlwifi/iwlwifi.ko \
@@ -929,7 +966,7 @@ endef
 define KernelPackage/libipw
   $(call KernelPackage/mac80211/Default)
   TITLE:=libipw for ipw2100 and ipw2200
-  DEPENDS:=@PCI_SUPPORT +kmod-crypto-michael-mic +kmod-lib80211 +kmod-cfg80211 +@DRIVER_WEXT_SUPPORT @!BIG_ENDIAN
+  DEPENDS:=@PCI_SUPPORT +kmod-crypto-michael-mic +kmod-crypto-ecb +kmod-lib80211 +kmod-cfg80211 +@DRIVER_WEXT_SUPPORT @!BIG_ENDIAN @!LINUX_3_18
   FILES:=$(PKG_BUILD_DIR)/drivers/net/wireless/intel/ipw2x00/libipw.ko
   AUTOLOAD:=$(call AutoProbe,libipw)
 endef
@@ -989,7 +1026,7 @@ endef
 
 define KernelPackage/libertas-usb
   $(call KernelPackage/mac80211/Default)
-  DEPENDS+= @USB_SUPPORT +kmod-cfg80211 +kmod-usb-core +kmod-lib80211 +@DRIVER_WEXT_SUPPORT +libertas-usb-firmware
+  DEPENDS+= @USB_SUPPORT +kmod-cfg80211 +kmod-usb-core +kmod-lib80211 +@DRIVER_WEXT_SUPPORT +libertas-usb-firmware @!LINUX_3_18
   TITLE:=Marvell 88W8015 Wireless Driver
   FILES:= \
 	$(PKG_BUILD_DIR)/drivers/net/wireless/marvell/libertas/libertas.ko \
@@ -999,7 +1036,7 @@ endef
 
 define KernelPackage/libertas-sdio
   $(call KernelPackage/mac80211/Default)
-  DEPENDS+= +kmod-cfg80211 +kmod-lib80211 +kmod-mmc +@DRIVER_WEXT_SUPPORT @!TARGET_uml +libertas-sdio-firmware
+  DEPENDS+= +kmod-cfg80211 +kmod-lib80211 +kmod-mmc +@DRIVER_WEXT_SUPPORT @!TARGET_uml +libertas-sdio-firmware @!LINUX_3_18
   TITLE:=Marvell 88W8686 Wireless Driver
   FILES:= \
 	$(PKG_BUILD_DIR)/drivers/net/wireless/marvell/libertas/libertas.ko \
@@ -1010,7 +1047,7 @@ endef
 define KernelPackage/libertas-spi
   $(call KernelPackage/mac80211/Default)
   SUBMENU:=Wireless Drivers
-  DEPENDS+= +kmod-cfg80211 +kmod-lib80211 +@DRIVER_WEXT_SUPPORT @!TARGET_uml +libertas-spi-firmware
+  DEPENDS+= +kmod-cfg80211 +kmod-lib80211 +@DRIVER_WEXT_SUPPORT @!TARGET_uml +libertas-spi-firmware @!LINUX_3_18
   KCONFIG := \
 	CONFIG_SPI=y \
 	CONFIG_SPI_MASTER=y
@@ -1314,6 +1351,15 @@ define KernelPackage/rtlwifi-pci
   HIDDEN:=1
 endef
 
+define KernelPackage/rtlwifi-btcoexist
+  $(call KernelPackage/mac80211/Default)
+  TITLE:=Realtek BT coexist support
+  DEPENDS+= +kmod-rtlwifi
+  FILES:=$(PKG_BUILD_DIR)/drivers/net/wireless/realtek/rtlwifi/btcoexist/btcoexist.ko
+  AUTOLOAD:=$(call AutoProbe,btcoexist)
+  HIDDEN:=1
+endef
+
 define KernelPackage/rtlwifi-usb
   $(call KernelPackage/mac80211/Default)
   TITLE:=Realtek common driver part (USB support)
@@ -1363,6 +1409,13 @@ define KernelPackage/rtl8192cu
   AUTOLOAD:=$(call AutoProbe,rtl8192cu)
 endef
 
+define KernelPackage/rtl8821ae
+  $(call KernelPackage/mac80211/Default)
+  TITLE:=Realtek RTL8821AE support
+  DEPENDS+= +kmod-rtlwifi-btcoexist +kmod-rtlwifi-pci +rtl8821ae-firmware
+  FILES:= $(PKG_BUILD_DIR)/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/rtl8821ae.ko
+  AUTOLOAD:=$(call AutoProbe,rtl8821ae)
+endef
 
 define KernelPackage/rtl8xxxu
   $(call KernelPackage/mac80211/Default)
@@ -1497,7 +1550,8 @@ ifdef CONFIG_PACKAGE_MAC80211_DEBUGFS
 	ATH9K_HTC_DEBUGFS \
 	ATH10K_DEBUGFS \
 	CARL9170_DEBUGFS \
-	ATH5K_DEBUG
+	ATH5K_DEBUG \
+	ATH6KL_DEBUG
 endif
 
 ifdef CONFIG_PACKAGE_MAC80211_TRACING
@@ -1537,6 +1591,10 @@ ifdef CONFIG_TARGET_ath25
 else
   config-y += ATH5K_PCI
 endif
+
+config-$(call config_package,ath6kl) += ATH6KL
+config-$(call config_package,ath6kl-sdio) += ATH6KL_SDIO
+config-$(call config_package,ath6kl-usb) += ATH6KL_USB
 
 config-$(call config_package,carl9170) += CARL9170
 
@@ -1627,12 +1685,14 @@ config-$(call config_package,zd1211rw) += ZD1211RW
 
 config-$(call config_package,rtlwifi) += RTL_CARDS RTLWIFI
 config-$(call config_package,rtlwifi-pci) += RTLWIFI_PCI
+config-$(call config_package,rtlwifi-btcoexist) += RTLBTCOEXIST
 config-$(call config_package,rtlwifi-usb) += RTLWIFI_USB
 config-$(call config_package,rtl8192c-common) += RTL8192C_COMMON
 config-$(call config_package,rtl8192ce) += RTL8192CE
 config-$(call config_package,rtl8192se) += RTL8192SE
 config-$(call config_package,rtl8192de) += RTL8192DE
 config-$(call config_package,rtl8192cu) += RTL8192CU
+config-$(call config_package,rtl8821ae) += RTL8821AE
 config-$(CONFIG_PACKAGE_RTLWIFI_DEBUG) += RTLWIFI_DEBUG
 
 config-$(call config_package,rtl8xxxu) += RTL8XXXU
@@ -1641,18 +1701,13 @@ config-y += RTL8XXXU_UNTESTED
 config-$(CONFIG_LEDS_TRIGGERS) += MAC80211_LEDS B43_LEDS B43LEGACY_LEDS
 
 MAKE_OPTS:= -C "$(PKG_BUILD_DIR)" \
-	CROSS_COMPILE="$(KERNEL_CROSS)" \
-	ARCH="$(LINUX_KARCH)" \
+	$(KERNEL_MAKE_FLAGS) \
 	EXTRA_CFLAGS="-I$(PKG_BUILD_DIR)/include $(IREMAP_CFLAGS)" \
 	KLIB_BUILD="$(LINUX_DIR)" \
 	MODPROBE=true \
 	KLIB=$(TARGET_MODULES_DIR) \
 	KERNEL_SUBLEVEL=$(lastword $(subst ., ,$(KERNEL_PATCHVER))) \
 	KBUILD_LDFLAGS_MODULE_PREREQ=
-
-ifneq ($(findstring c,$(OPENWRT_VERBOSE)),)
-  MAKE_OPTS += V=1
-endif
 
 define ConfigVars
 $(subst $(space),,$(foreach opt,$(config-$(1)),CPTCFG_$(opt)=$(1)
@@ -1782,6 +1837,9 @@ $(eval $(call KernelPackage,airo))
 $(eval $(call KernelPackage,ath))
 $(eval $(call KernelPackage,ath10k))
 $(eval $(call KernelPackage,ath5k))
+$(eval $(call KernelPackage,ath6kl))
+$(eval $(call KernelPackage,ath6kl-sdio))
+$(eval $(call KernelPackage,ath6kl-usb))
 $(eval $(call KernelPackage,ath9k))
 $(eval $(call KernelPackage,ath9k-common))
 $(eval $(call KernelPackage,ath9k-htc))
@@ -1835,12 +1893,14 @@ $(eval $(call KernelPackage,rtl8180))
 $(eval $(call KernelPackage,rtl8187))
 $(eval $(call KernelPackage,rtlwifi))
 $(eval $(call KernelPackage,rtlwifi-pci))
+$(eval $(call KernelPackage,rtlwifi-btcoexist))
 $(eval $(call KernelPackage,rtlwifi-usb))
 $(eval $(call KernelPackage,rtl8192c-common))
 $(eval $(call KernelPackage,rtl8192ce))
 $(eval $(call KernelPackage,rtl8192se))
 $(eval $(call KernelPackage,rtl8192de))
 $(eval $(call KernelPackage,rtl8192cu))
+$(eval $(call KernelPackage,rtl8821ae))
 $(eval $(call KernelPackage,rtl8xxxu))
 $(eval $(call KernelPackage,wlcore))
 $(eval $(call KernelPackage,wl12xx))

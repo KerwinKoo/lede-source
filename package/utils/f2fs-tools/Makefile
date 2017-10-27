@@ -8,14 +8,14 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=f2fs-tools
-PKG_VERSION:=1.8.0
+PKG_VERSION:=1.9.0
 PKG_RELEASE:=1
 
 PKG_LICENSE:=GPLv2
 
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://git.kernel.org/pub/scm/linux/kernel/git/jaegeuk/f2fs-tools.git/snapshot/
-PKG_HASH:=34790bccd74086e6b4f04fcac3a167ce1ca3319ce660454bceefc45c52906f94
+PKG_HASH:=77217562ae7011a6d81b7b3c43c42623db1796a57596408d6c8037def70d6cc7
 
 PKG_FIXUP:=autoreconf
 PKG_BUILD_PARALLEL:=1
@@ -57,7 +57,11 @@ define Package/libf2fs
 endef
 
 CONFIGURE_ARGS += \
-	--without-selinux
+	--without-selinux \
+	--without-blkid
+
+CONFIGURE_VARS += \
+	ac_cv_file__git=no
 
 define Package/libf2fs/install
 	$(INSTALL_DIR) $(1)/usr/lib
